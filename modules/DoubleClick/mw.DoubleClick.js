@@ -164,8 +164,12 @@ mw.DoubleClick.prototype = {
 				// set current slot to postRoll
 				_this.currentAdSlotType = 'postroll';
 				
-				// trigger the double click end sequence:
-				_this.adsLoader.contentComplete();
+				if( _this.adsLoader ){
+					// trigger the double click end sequence:
+					_this.adsLoader.contentComplete();
+				} else {
+					callback();
+				}
 			};
 		});
 	},
