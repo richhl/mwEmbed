@@ -388,6 +388,11 @@ mw.AdTimeline.prototype = {
 		embedPlayer.enablePlayControls();
 		embedPlayer.monitor();
 		embedPlayer.seeking = false;
+		// make sure the duration is set ( sometimes ad plugins don't clean up ) 
+		if( embedPlayer.getNativeDuration() ){
+			embedPlayer.duration = embedPlayer.getNativeDuration();
+		}
+		
 		// restore in sequence property; 
 		embedPlayer.sequenceProxy.isInSequence = false;
 		// trigger an event so plugins can restore their content based actions

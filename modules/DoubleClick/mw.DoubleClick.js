@@ -452,19 +452,20 @@ mw.DoubleClick.prototype = {
 		adsListener( 'CONTENT_PAUSE_REQUESTED', function(event){
 			// set a local method for true ad playback start. 
 			_this.startedAdPlayback = function(){
+				// disable the poster for smother HTML5 src switch:
 				_this.embedPlayer.adTimeline.updateUiForAdPlayback( _this.currentAdSlotType );
 				_this.startedAdPlayback = null;
 			}
 			// loading ad:
 			_this.embedPlayer.pauseLoading();
 			// sometimes CONTENT_PAUSE_REQUESTED is the last event we receive :(
-			// give double click 8 seconds to load the ad, else return to content playback
+			// give double click 12 seconds to load the ad, else return to content playback
 			setTimeout( function(){
 				if( $.isFunction( _this.startedAdPlayback ) ){
 					// ad error will resume playback
 					_this.onAdError( " CONTENT_PAUSE_REQUESTED without no ad LOADED! ");
 				}
-			}, 8000 );
+			}, 12000 );
 		} );
 		adsListener( 'LOADED', function(){
 			// check for startted ad playback sequence callback 
@@ -497,7 +498,7 @@ mw.DoubleClick.prototype = {
 				// 		fixes this bug on their side. 
 				return ;
 			} else{
-				mw.log( 'DoubleClick:: time delta since last adStart: ' + 
+				mw.log( 'DoubleClick:: time delta since last adStart: ' +
 						( new Date().getTime() - lastAdStartTime ) ); 
 			}
 			// update the last ad start time: 
@@ -833,6 +834,7 @@ mw.DoubleClick.prototype = {
 		var playBindStr = 'playing.dcForceContentPlay';
 		$( vid ).unbind( playBindStr ).bind( playBindStr, function(){
 			isPlaying = true;
+			_this.embedPlayer.duration = vid.duration;
 			$( vid ).unbind( playBindStr );
 		});
 		vid.play();
