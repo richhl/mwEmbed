@@ -16,9 +16,32 @@
 // Enable uiconf js which includes external resources 
 mw.setConfig('Kaltura.EnableEmbedUiConfJs', true);
 
-function jsKalturaPlayerTest( videoId ){
+function jsKalturaPlayerTest( playerId ){
 	// Name this module
 	module( "limeSurvey Player Form Box test" );
+    
+    asyncTest("Seek Events", function(){
+        var kdp = document.getElementById( playerId );
+        
+        // Add a binding for when seek is completed: 
+        kdp.kBind('playerSeekEnd', function(){
+            setTimeout(function(){
+                ok( $('#k-form-container-' + playerId).length, "Found the plugin's div!");
+                start(); //Run the test
+            }, 2000)
+        });
+        
+        // Once playing issue seek
+        var seekDone = false;
+        kdp.kBind('playerUpdatePlayhead', function(){
+            if( ! seekDone ){
+                kdp.sendNotification('doSeek', 10 );
+            }
+            seekDone = true;
+        });
+        
+        kdp.sendNotification('doPlay');
+    });
 }
 
 </script>
@@ -29,12 +52,12 @@ function jsKalturaPlayerTest( videoId ){
 <h2>limeSurveyCuePointForms Player </h2>
 <div id="kaltura_player" style="width:400px;height:330px;"></div>
 <script>
-kWidget.embed({
-	'cache_st': 23,
+kWidget.featureConfig({
+	'cache_st': 52345,
 	'targetId' : 'kaltura_player',
-	'wid' : '_309',
-	'uiconf_id' : '12527451',
-	'entry_id' : '0_w7n1a4ni',
+	'wid' : '_243342',
+	'uiconf_id' : '12644921',
+	'entry_id' : '0_uka1msg4',
 	'flashvars': {
 		'limeSurveyCuePointForms':{
 			'plugin': true,
@@ -44,7 +67,7 @@ kWidget.embed({
 			
 			// Actual plugin config:
 			'tags': 'limeSurvey',
-			'backgroundHexColor': '#ffccaa',
+			'backgroundHexColor': '#ccccff',
 			'backgroundAlpha': 0.4,
 			
 			// Resources
