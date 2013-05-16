@@ -256,6 +256,14 @@ mw.EmbedPlayerNative = {
 		if( this.useNativePlayerControls() ){
 			$( vid ).attr( 'controls', "true" );
 		}
+		// XXX test LG fullscreen issue with absolute position
+		$( vid ).css({
+			'position': 'absolute',
+			'top': 0,
+			'left': 0,
+			'display' : 'inline-block'
+		})
+		
 		// make sure the video is shown:
 		$( vid ).show();
 
