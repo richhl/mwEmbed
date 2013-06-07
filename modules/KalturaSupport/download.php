@@ -288,10 +288,39 @@ class downloadEntry {
 			return base64_encode( $this->getResultObject()->request->getReferer() );
 		}
 	}
-	public function getSourceForUserAgent(){
 
+	public function getDeviceForUserAgent(){
 		// Get user agent
 		$userAgent = $this->getResultObject()->request->getUserAgent();
+
+		$device = false;
+
+		// if your on an iphone or BB 7.1 we are done:
+		if( strpos( $userAgent, 'iPhone' )) {
+		    $device = 'iPhone'; || 
+		} else if ( strpos( $userAgent, 'BlackBerry' )) {
+		    if ( strpos( $userAgent, '7.1' ) ) {
+			$device = 'BlackBerry/7.1';
+		    } else {
+			$device = 'BlackBerry';
+		    }
+		} else if( strpos( $userAgent, 'Chrome' ) !== false ){
+		    $device = 'Chrome';
+		} else if( strpos( $userAgent, 'Firefox' ) !== false ){
+		    if ( strpos( $userAgent, 'Firefox/3' ) ) {
+			$device = 'Firefox/3';
+		    } else {
+			$device = 'Firefox';
+		    }
+		}
+
+		return $device;
+	}
+		
+	public function getSourceForUserAgent(){
+
+		// Get device from user agent
+		$device = $this->getDeviceForUserAgent();
 
 		$flavorUrl = false;
 		
@@ -301,25 +330,31 @@ class downloadEntry {
 			$flavorUrl = $iPhoneSrc;
 		}
 		// if your on an iphone or BB 7.1 we are done:
-		if( strpos( $userAgent, 'iPhone' ) || ( strpos( $userAgent, 'BlackBerry' ) && strpos( $userAgent, '7.1' ) ) ){
+		if( $device == 'iPhone' || $device == 'BlackBerry/7.1' ) ){
 			return $flavorUrl;
 		}
+		// if your on a BB and we have rtsp3gp for BlackBerry, return rtsp3gp.
+		if( $device == 'BlackBerry' ){
+		    $rtspSrc = $this->getSourceFlavorUrl( 'rtsp3gp' );
+		    if ($rtspSrc) { //
+			return 	$rtspSrc;
+		    } else {
+		}
+
+		//at this point we have $flavorUrl = iPhone h.264 low quality
+		//will grab h264 for iPad and 3gp for better capabilities devices.
+
 		// h264 for iPad
 		$iPadSrc = $this->getSourceFlavorUrl( 'iPad' );
 		if( $iPadSrc ) {
 			$flavorUrl = $iPadSrc;
-		}
-		// rtsp3gp for BlackBerry
-		$rtspSrc = $this->getSourceFlavorUrl( 'rtsp3gp' );
-		if( strpos( $userAgent, 'BlackBerry' ) !== false && $rtspSrc){
-			return 	$rtspSrc;
 		}
 
 		// 3gp check
 		$gpSrc = $this->getSourceFlavorUrl( '3gp' );
 		if( $gpSrc ) {
 			// Blackberry ( newer blackberry's can play the iPhone src but better safe than broken )
-			if( strpos( $userAgent, 'BlackBerry' ) !== false ){
+			if( $device == 'BlackBerry' ){
 				$flavorUrl = $gpSrc;
 			}
 			// if we have no iphone source then do use 3gp:
@@ -328,29 +363,31 @@ class downloadEntry {
 			}
 		}
 
+		//at this point we have $flavorUrl = h264 for iPad or iPhone h.264 low quality
+		//or 3gp by that order of precedence.
+
 		// Firefox > 3.5 and chrome support ogg
-		$ogSrc = $this->getSourceFlavorUrl( 'ogg' );
-		if( $ogSrc ){
-			// chrome supports ogg:
-			if( strpos( $userAgent, 'Chrome' ) !== false ){
-				$flavorUrl = $ogSrc;
+		// Firefox > 3 and chrome support webm ( use after ogg )
+		if ( $device == 'Chrome' || $device == 'Firefox' ) {
+		    $webmSrc = $this->getSourceFlavorUrl( 'webm' );
+		    if( $webmSrc ){
+			$flavorUrl = $webmSrc;
+		    } else { //use ogg if there is not webm
+			$ogSrc = $this->getSourceFlavorUrl( 'ogg' );
+			if( $ogSrc ){
+			    $flavorUrl = $ogSrc;
 			}
-			// firefox 3.5 and greater supported ogg:
-			if( strpos( $userAgent, 'Firefox' ) !== false ){
-				$flavorUrl = $ogSrc;
-			}
+		    }
+		} else if ($device == 'Firefox/3') { // Firefox > 3.5 supports ogg
+		    $ogSrc = $this->getSourceFlavorUrl( 'ogg' );
+		    if( $ogSrc ){
+			$flavorUrl = $ogSrc;
+		    }
 		}
 
-		// Firefox > 3 and chrome support webm ( use after ogg )
-		$webmSrc = $this->getSourceFlavorUrl( 'webm' );
-		if( $webmSrc ){
-			if( strpos( $userAgent, 'Chrome' ) !== false ){
-				$flavorUrl = $webmSrc;
-			}
-			if( strpos( $userAgent, 'Firefox/3' ) === false && strpos( $userAgent, 'Firefox' ) !== false ){
-				$flavorUrl = $webmSrc;
-			}
-		}
+		//at this point we have $flavorUrl = h264 for iPad or iPhone h.264 low quality
+		//or 3gp or webm if Chrome or Firefox or ogg if Firefox > 3.5 by that order of precedence.
+
 		return $flavorUrl;
 	}
 
